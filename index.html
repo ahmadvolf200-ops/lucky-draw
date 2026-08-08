@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GLOBAL LUCKY DRAW</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://sad.adsgram.ai/js/adsgram.min.js?v=1"></script>
+    <style>
+        :root {
+            --bg-color: #050811;
+            --card-bg: #111827;
+            --accent-gold: #fbbf24;
+            --accent-blue: #38bdf8;
+            --text-main: #ffffff;
+            --text-sub: #9ca3af;
+        }
+        body {
+            margin: 0;
+            padding: 10px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at center, #1e1b4b 0%, var(--bg-color) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+        .app-container {
+            width: 100%;
+            max-width: 420px;
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 16px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+            border: 2px solid rgba(251, 191, 36, 0.2);
+            box-sizing: border-box;
+            position: relative;
+        }
+        .game-title {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 900;
+            background: linear-gradient(to right, #fbbf24, #f43f5e, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .menu-wrapper { position: relative; }
+        .menu-btn, .history-drawer-btn {
+            background: #1f2937; border: 1px solid #374151; color: white; font-size: 15px; padding: 6px 10px; border-radius: 12px; cursor: pointer;
+        }
+        .dropdown-menu {
+            display: none; position: absolute; top: 45px; left: 0; background: #1f2937; border: 1px solid #374151; border-radius: 12px; width: 180px; box-shadow: 0 10px 25px rgba(0,0,0,0.7); z-index: 100; overflow: hidden;
+        }
+        .dropdown-menu button {
+            width: 100%; background: none; border: none; color: white; padding: 11px; text-align: left; font-size: 13px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .dropdown-menu button:hover { background: #374151; color: var(--accent-gold); }
+        
+        .profile-box { display: flex; align-items: center; gap: 8px; }
+        .profile-info { text-align: right; }
+        .profile-name { font-size: 12px; font-weight: bold; color: var(--text-main); max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .profile-id { font-size: 9px; color: var(--text-sub); }
+        .profile-avatar { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--accent-gold); object-fit: cover; background: #374151; }
+
+        .top-row {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(17, 24, 39, 0.7); padding: 10px 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .wheel-container { text-align: center; cursor: pointer; }
+        .wheel-icon {
+            width: 48px; height: 48px; border-radius: 50%;
+            background: conic-gradient(#fbbf24 0deg 60deg, #f43f5e 60deg 120deg, #8b5cf6 120deg 180deg, #374151 180deg 240deg, #10b981 240deg 300deg, #3b82f6 300deg 360deg);
+            border: 2px solid white; display: flex; justify-content: center; align-items: center; font-size: 20px;
+            box-shadow: 0 0 12px rgba(251,191,36,0.5);
+            transition: transform 0.3s;
+        }
+        .wheel-icon:hover { transform: scale(1.08); }
+        .wheel-label { font-size: 10px; color: var(--accent-gold); margin-top: 4px; font-weight: bold; }
+        
+        .balance-display { background: #1f2937; border: 1px solid #374151; padding: 6px 14px; border-radius: 12px; text-align: center; }
+        .balance-title { font-size: 9px; color: var(--text-sub); text-transform: uppercase; }
+        .balance-value { font-size: 14px; font-weight: bold; color: var(--accent-blue); }
+        .buy-chance-btn { background: #10b981; color: white; border: none; font-size: 9px; padding: 4px 8px; border-radius: 6px; cursor: pointer; margin-top: 4px; font-weight: bold; text-transform: uppercase; }
+
+        .digits-section { background: #030712; border: 2px solid #1f2937; border-radius: 16px; padding: 12px; margin-bottom: 15px; text-align: center; box-shadow: inset 0 4px 10px rgba(0,0,0,0.5); }
+        .digits-container { display: flex; justify-content: center; gap: 5px; }
+        .digit-box {
+            width: 30px; height: 42px; background: #111827; border: 1px solid #374151; border-radius: 8px;
+            display: flex; justify-content: center; align-items: center; font-size: 18px; font-weight: bold; color: var(--accent-gold);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .middle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 12px; }
+        .pool-box { background: #1f2937; border: 1px solid #374151; padding: 10px; border-radius: 16px; flex-grow: 1; text-align: center; }
+        .pool-title { font-size: 10px; color: var(--text-sub); text-transform: uppercase; }
+        .pool-value { font-size: 14px; font-weight: bold; color: #10b981; margin-top: 3px; }
+
+        .play-btn {
+            background: linear-gradient(135deg, #fbbf24, #d97706); color: #000; border: none; width: 75px; height: 75px;
+            border-radius: 50%; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 6px 20px rgba(251, 191, 36, 0.5);
+            display: flex; justify-content: center; align-items: center; transition: 0.15s; text-transform: uppercase; flex-shrink: 0;
+        }
+        .play-btn:active { transform: scale(0.93); }
+        .play-btn:disabled { background: #374151; color: #9ca3af; cursor: not-allowed; box-shadow: none; }
+
+        .bottom-row { display: flex; gap: 12px; }
+        .bottom-card {
+            flex: 1; background: #1f2937; border: 1px solid #374151; border-radius: 16px; padding: 12px; min-height: 110px; display: flex; flex-direction: column;
+        }
+        .bottom-card-title { font-size: 11px; font-weight: bold; color: var(--accent-gold); margin-bottom: 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 6px; }
+        .collected-list { font-size: 11px; color: var(--text-sub); overflow-y: auto; max-height: 80px; text-align: center; }
+        .collected-item { background: #030712; padding: 4px; margin: 3px 0; border-radius: 6px; color: var(--accent-blue); font-family: monospace; font-weight: bold; }
+        .timer-text { font-size: 10px; color: var(--text-main); text-align: center; margin-top: auto; line-height: 1.4; }
+        .countdown-digits { font-size: 11px; font-weight: bold; color: var(--accent-gold); font-family: monospace; background: rgba(0,0,0,0.3); padding: 3px 6px; border-radius: 6px; display: inline-block; margin-top: 3px; }
+
+        /* منوی کشویی از راست (تاریخچه برندگان) */
+        .drawer-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 999;
+        }
+        .right-drawer {
+            position: fixed; top: 0; right: -320px; width: 280px; height: 100%; background: #111827; border-left: 2px solid rgba(251,191,36,0.3);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.9); z-index: 1000; transition: right 0.3s cubic-bezier(0.15, 0.85, 0.15, 1);
+            padding: 20px; box-sizing: border-box; display: flex; flex-direction: column;
+        }
+        .right-drawer.open { right: 0; }
+        .drawer-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px; }
+        .drawer-title { color: var(--accent-gold); font-size: 15px; font-weight: bold; text-transform: uppercase; }
+        .drawer-close { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
+        
+        .history-item {
+            background: #1f2937; border: 1px solid #374151; border-radius: 12px; padding: 10px; margin-bottom: 10px; text-align: left;
+        }
+        .history-week { font-size: 10px; color: var(--accent-blue); font-weight: bold; margin-bottom: 4px; text-transform: uppercase; }
+        .history-code { font-family: monospace; font-size: 13px; color: var(--accent-gold); font-weight: bold; background: #030712; padding: 4px 6px; border-radius: 6px; display: inline-block; margin-bottom: 6px; }
+        .history-winner-info { font-size: 11px; color: var(--text-sub); line-height: 1.4; }
+
+        /* پاپ‌آپ‌ها */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); justify-content: center; align-items: center; z-index: 1000; }
+        
+        .wheel-modal-content {
+            background: linear-gradient(145deg, #1f2937, #0b0f19); padding: 22px; border-radius: 28px; width: 92%; max-width: 360px; text-align: center; border: 2px solid rgba(251, 191, 36, 0.4); position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+        }
+        .close-modal-btn {
+            position: absolute; top: 14px; right: 16px; background: rgba(255,255,255,0.1); border: none; color: white; width: 34px; height: 34px; border-radius: 50%; font-size: 18px; cursor: pointer; font-weight: bold; transition: 0.2s;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .close-modal-btn:hover { background: #ef4444; }
+        .wheel-timer { font-size: 12px; color: var(--accent-gold); margin-bottom: 15px; font-weight: bold; background: rgba(251,191,36,0.1); padding: 6px 12px; border-radius: 10px; display: inline-block; border: 1px solid rgba(251,191,36,0.2); }
+        
+        .big-wheel-container { position: relative; width: 270px; height: 270px; margin: 10px auto; filter: drop-shadow(0 8px 20px rgba(0,0,0,0.7)); }
+        .wheel-pointer {
+            position: absolute; top: -14px; left: 50%; transform: translateX(-50%); width: 0; height: 0; 
+            border-left: 14px solid transparent; border-right: 14px solid transparent; border-bottom: 28px solid #f43f5e; z-index: 20;
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8));
+        }
+        .big-wheel {
+            width: 100%; height: 100%; border-radius: 50%; border: 6px solid #fbbf24;
+            background: conic-gradient(
+                #3b82f6 0deg 60deg,    
+                #ec4899 60deg 120deg,   
+                #8b5cf6 120deg 180deg,  
+                #374151 180deg 240deg,  
+                #10b981 240deg 300deg,  
+                #fbbf24 300deg 360deg   
+            );
+            position: relative; transition: transform 4s cubic-bezier(0.15, 0.85, 0.15, 1);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.7);
+        }
+        .wheel-center-hub {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 50px; height: 50px; background: radial-gradient(#fbbf24, #b45309); border-radius: 50%;
+            border: 4px solid #ffffff; z-index: 10; box-shadow: 0 5px 12px rgba(0,0,0,0.7);
+        }
+        .w-text {
+            position: absolute; width: 90px; height: 30px; left: 90px; top: 120px;
+            font-size: 13px; font-weight: 900; color: #ffffff; text-shadow: 1px 1px 4px rgba(0,0,0,0.95);
+            text-align: center; line-height: 30px; letter-spacing: 0.5px;
+        }
+        .t1 { transform: rotate(30deg) translate(80px) rotate(-30deg); }
+        .t2 { transform: rotate(90deg) translate(80px) rotate(-90deg); color: #fff; }
+        .t3 { transform: rotate(150deg) translate(76px) rotate(-150deg); font-size: 11px; }
+        .t4 { transform: rotate(210deg) translate(80px) rotate(-210deg); color: #9ca3af; }
+        .t5 { transform: rotate(270deg) translate(80px) rotate(-270deg); }
+        .t6 { transform: rotate(330deg) translate(76px) rotate(-330deg); font-size: 12px; color: #451a03; text-shadow: 0 0 2px #fff; }
+
+        .spin-action-btn {
+            background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 14px 40px; border-radius: 35px; font-size: 17px; font-weight: 900; cursor: pointer; margin-top: 18px; box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5); text-transform: uppercase; letter-spacing: 1.5px; transition: 0.2s;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        .spin-action-btn:active { transform: scale(0.95); }
+
+        .settings-modal-content {
+            background: #1f2937; padding: 22px; border-radius: 24px; width: 90%; max-width: 340px; text-align: right; border: 2px solid rgba(56, 189, 248, 0.3); position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.9); direction: ltr;
+            max-height: 85vh; overflow-y: auto;
+        }
+        .settings-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
+        .settings-title { color: var(--accent-blue); font-size: 17px; font-weight: 900; text-transform: uppercase; }
+        
+        .settings-profile-center { text-align: center; margin-bottom: 15px; }
+        .settings-avatar { width: 70px; height: 70px; border-radius: 50%; border: 3px solid var(--accent-gold); object-fit: cover; box-shadow: 0 0 15px rgba(251,191,36,0.4); margin-bottom: 5px; background: #374151; }
+        .avatar-change-hint { font-size: 10px; color: var(--accent-blue); cursor: pointer; display: inline-block; padding: 3px 8px; background: rgba(56,189,248,0.1); border-radius: 6px; }
+
+        .form-group { margin-bottom: 10px; text-align: left; }
+        .form-label { font-size: 11px; color: var(--text-sub); margin-bottom: 3px; display: block; text-transform: uppercase; }
+        .form-input, .form-select {
+            width: 100%; background: #111827; border: 1px solid #374151; padding: 9px 12px; border-radius: 10px; color: white; font-size: 13px; box-sizing: border-box; outline: none;
+        }
+        .form-input:focus, .form-select:focus { border-color: var(--accent-blue); }
+
+        .save-settings-btn {
+            background: linear-gradient(135deg, #38bdf8, #0284c7); color: white; border: none; width: 100%; padding: 12px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 15px; text-transform: uppercase; box-shadow: 0 5px 15px rgba(56,189,248,0.4);
+        }
+
+        .general-modal-content { background: #1f2937; padding: 22px; border-radius: 20px; width: 90%; max-width: 330px; text-align: center; border: 1px solid #374151; box-shadow: 0 15px 30px rgba(0,0,0,0.8); max-height: 85vh; overflow-y: auto; }
+        .modal-btn { background: var(--accent-blue); color: white; border: none; padding: 9px 20px; border-radius: 10px; margin-top: 15px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="game-title">GLOBAL LUCKY DRAW</div>
+
+        <div class="header-section">
+            <div class="menu-wrapper">
+                <button class="menu-btn" onclick="toggleMenu()">⋮</button>
+                <div class="dropdown-menu" id="dropdownMenu">
+                    <button onclick="openSettingsModal()">⚙️ Settings</button>
+                    <button onclick="watchAd()">📺 Watch Ad (+Chances)</button>
+                    <button onclick="openReferralModal()">👥 Invite Friends</button>
+                    <button onclick="openAboutModal()">ℹ️ About Game</button>
+                    <button onclick="window.open('https://t.me/a_LisanX', '_blank')">📞 Contact Support</button>
+                </div>
+            </div>
+
+            <!-- دکمه منوی کشویی تاریخچه و برندگان از سمت راست -->
+            <button class="history-drawer-btn" onclick="toggleHistoryDrawer()">🏆 Past Winners</button>
+
+            <div class="profile-box">
+                <div class="profile-info">
+                    <div class="profile-name" id="headerPlayerName">Loading...</div>
+                    <div class="profile-id" id="playerAccId">ID: #000000</div>
+                </div>
+                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100" class="profile-avatar" id="headerAvatar" alt="Profile" onerror="this.src='https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'">
+            </div>
+        </div>
+
+        <div class="top-row">
+            <div class="wheel-container" onclick="openWheelModal()">
+                <div class="wheel-icon">🎡</div>
+                <div class="wheel-label">Lucky Wheel</div>
+            </div>
+            <div class="balance-display">
+                <div class="balance-title">Chances & Wallet</div>
+                <div class="balance-value" id="chanceBalance">2</div>
+                <button class="buy-chance-btn" onclick="buyChance()">Buy (20 TL)</button>
+            </div>
+        </div>
+
+        <div class="digits-section">
+            <div style="font-size: 10px; color: var(--text-sub); margin-bottom: 5px; text-transform: uppercase;">Weekly Lucky Sequence</div>
+            <div class="digits-container" id="digitsContainer">
+                <div class="digit-box">?</div><div class="digit-box">?</div><div class="digit-box">?</div>
+                <div class="digit-box">?</div><div class="digit-box">?</div><div class="digit-box">?</div>
+                <div class="digit-box">?</div><div class="digit-box">?</div><div class="digit-box">?</div>
+            </div>
+        </div>
+
+        <div class="middle-row">
+            <div class="pool-box">
+                <div class="pool-title">Weekly Prize Pool</div>
+                <div class="pool-value" id="prizePoolDisplay">$1,250.00 USDT</div>
+                <div style="font-size: 8px; color: var(--accent-blue); margin-top: 2px;" id="walletStatusText">Wallet: Not Connected</div>
+            </div>
+            <button class="play-btn" id="playBtn" onclick="startPlay()">PLAY</button>
+        </div>
+
+        <div class="bottom-row">
+            <div class="bottom-card">
+                <div class="bottom-card-title">Collected Sequences</div>
+                <div class="collected-list" id="collectedList">
+                    <div style="color: #4b5563; font-style: italic; margin-top: 15px;">No codes yet</div>
+                </div>
+            </div>
+            <div class="bottom-card">
+                <div class="bottom-card-title">Draw Deadline</div>
+                <div class="timer-text">
+                    Friday 21:00 (TR)<br>
+                    <div class="countdown-digits" id="countdownTimer">00d 00h 00m 00s</div><br>
+                    <span style="font-size: 9px; color: #10b981;">90% Win | 5% You | 5% Next</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- منوی کشویی از راست (تاریخچه برندگان، کدهای ۹ رقمی و جوایز) -->
+    <div class="drawer-overlay" id="drawerOverlay" onclick="toggleHistoryDrawer()"></div>
+    <div class="right-drawer" id="rightDrawer">
+        <div class="drawer-header">
+            <div class="drawer-title">🏆 Past Winners & Codes</div>
+            <button class="drawer-close" onclick="toggleHistoryDrawer()">×</button>
+        </div>
+        <div style="overflow-y: auto; flex-grow: 1; padding-right: 2px;">
+            <div class="history-item">
+                <div class="history-week">Week #32 (Previous)</div>
+                <div class="history-code">492018573</div>
+                <div class="history-winner-info">
+                    👤 Winner: <b>Alex_Crypto</b><br>
+                    🆔 Account ID: #884920<br>
+                    🎁 Prize (90%): <span style="color: #10b981; font-weight: bold;">$1,125.00 USDT</span><br>
+                    💼 Wallet: EQD4...91x
+                </div>
+            </div>
+            <div class="history-item">
+                <div class="history-week">Week #31</div>
+                <div class="history-code">104928371</div>
+                <div class="history-winner-info">
+                    👤 Winner: <b>Sara_Gamer</b><br>
+                    🆔 Account ID: #551029<br>
+                    🎁 Prize (90%): <span style="color: #10b981; font-weight: bold;">$950.00 USDT</span><br>
+                    💼 Wallet: EQB2...33a
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- پاپ‌آپ تنظیمات -->
+    <div class="modal" id="settingsModal">
+        <div class="settings-modal-content">
+            <div class="settings-header">
+                <div class="settings-title">Account Settings</div>
+                <button class="close-modal-btn" style="position:static;" onclick="closeSettingsModal()">×</button>
+            </div>
+
+            <div class="settings-profile-center">
+                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100" class="settings-avatar" id="settingsAvatarPreview" alt="Avatar" onerror="this.src='https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'">
+                <br>
+                <label class="avatar-change-hint" for="galleryFileInput">Choose from Gallery 📁</label>
+                <input type="file" id="galleryFileInput" accept="image/*" style="display: none;" onchange="previewGalleryImage(event)">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Player Name</label>
+                <input type="text" class="form-input" id="inputPlayerName">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Age</label>
+                <input type="number" class="form-input" id="inputPlayerAge" value="25">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Gender</label>
+                <select class="form-select" id="selectPlayerGender">
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Telegram TON Wallet Address</label>
+                <input type="text" class="form-input" id="inputTonWallet" placeholder="EQD... (Your TON Wallet)">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Referral Code (Invited By)</label>
+                <input type="text" class="form-input" id="inputRefCode" placeholder="Enter friend's ID code">
+            </div>
+
+            <button class="save-settings-btn" onclick="saveSettings()">Save Changes</button>
+        </div>
+    </div>
+
+    <!-- پاپ‌آپ دعوت دوستان -->
+    <div class="modal" id="referralModal">
+        <div class="settings-modal-content" style="text-align: center;">
+            <div class="settings-header">
+                <div class="settings-title">Invite Friends & Earn</div>
+                <button class="close-modal-btn" style="position:static;" onclick="closeReferralModal()">×</button>
+            </div>
+            <p style="font-size: 12px; color: var(--text-sub); margin-bottom: 15px;">
+                Invite your friends to Global Lucky Draw! Get <b style="color: var(--accent-gold);">+1 Chance</b> for every friend who joins using your link.
+            </p>
+            <div class="form-group" style="text-align: left;">
+                <label class="form-label">Your Invite Link</label>
+                <input type="text" class="form-input" id="referralLinkInput" readonly style="font-size: 11px; color: var(--accent-blue);">
+            </div>
+            <button class="save-settings-btn" onclick="copyReferralLink()">📋 Copy Invite Link</button>
+        </div>
+    </div>
+
+    <!-- پاپ‌آپ چرخ شانس -->
+    <div class="modal" id="wheelModal">
+        <div class="wheel-modal-content">
+            <button class="close-modal-btn" onclick="closeWheelModal()">×</button>
+            <h3 style="color: var(--accent-gold); margin-top: 5px; font-size: 19px; text-transform: uppercase;">Daily Lucky Wheel</h3>
+            <div class="wheel-timer" id="wheelTimerText">Spin Anytime (Test Mode)</div>
+            
+            <div class="big-wheel-container">
+                <div class="wheel-pointer"></div>
+                <div class="wheel-center-hub"></div>
+                <div class="big-wheel" id="bigWheel">
+                    <div class="w-text t1">Pooch</div>
+                    <div class="w-text t2">+1 Chance / Buy</div>
+                    <div class="w-text t3">+2 Weekly</div>
+                    <div class="w-text t4">Pooch</div>
+                    <div class="w-text t5">+1 Chance</div>
+                    <div class="w-text t6">💎 +5 Rare</div>
+                </div>
+            </div>
+
+            <button class="spin-action-btn" id="spinActionBtn" onclick="spinTheWheel()">SPIN NOW</button>
+        </div>
+    </div>
+
+    <!-- پاپ‌آپ هشدار عمومی -->
+    <div class="modal" id="generalModal">
+        <div class="general-modal-content">
+            <h3 id="modalTitle" style="color: var(--accent-gold); margin-top: 0;">Notice</h3>
+            <div id="modalText" style="font-size: 12px; color: var(--text-sub); text-align: left; line-height: 1.6;">Message text here</div>
+            <button class="modal-btn" onclick="closeModal()">OK</button>
+        </div>
+    </div>
+
+    <script>
+        let userChances = 2;
+        let collectedCodes = [];
+        let globalUsedCodes = new Set();
+        
+        // متغیرهای مالی استخر جوایز بر اساس درخواست شما
+        let totalPrizePoolUSD = 1250.00; // این مبلغ شامل ۵٪ باقی‌مانده از هفته قبل به عنوان پایه است
+        let developerEarningsUSD = 0.00; // سهم ۵ درصدی شما
+        let nextWeekRolloverUSD = 0.00;  // سهم ۵ درصدی برای هفته بعد
+
+        let playerTelegramId = "948210";
+        let userProfile = {
+            name: "Ahmad Warrior",
+            age: "25",
+            gender: "Male",
+            wallet: "",
+            avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100"
+        };
+
+        let tempNewAvatar = "";
+
+        // تایمر معکوس زنده تا جمعه ساعت ۲۱:۰۰
+        function startCountdownTimer() {
+            function updateTimer() {
+                const now = new Date();
+                const target = new Date();
+                target.setHours(21, 0, 0, 0);
+                
+                let dayOfWeek = now.getDay();
+                let daysUntilFriday = (5 - dayOfWeek + 7) % 7;
+                if (daysUntilFriday === 0 && now.getTime() > target.getTime()) {
+                    daysUntilFriday = 7;
+                }
+                target.setDate(now.getDate() + daysUntilFriday);
+
+                const diff = target - now;
+                if (diff <= 0) {
+                    document.getElementById('countdownTimer').innerText = "DRAWING NOW!";
+                    return;
+                }
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                document.getElementById('countdownTimer').innerText = 
+                    `${days}d ${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
+            }
+            updateTimer();
+            setInterval(updateTimer, 1000);
+        }
+
+        function toggleHistoryDrawer() {
+            let drawer = document.getElementById('rightDrawer');
+            let overlay = document.getElementById('drawerOverlay');
+            if (drawer.classList.contains('open')) {
+                drawer.classList.remove('open');
+                overlay.style.display = 'none';
+            } else {
+                drawer.classList.add('open');
+                overlay.style.display = 'block';
+            }
+        }
+
+        function initTelegramUser() {
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
+                let tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+                if (tgUser.first_name) {
+                    userProfile.name = tgUser.first_name + (tgUser.last_name ? " " + tgUser.last_name : "");
+                }
+                if (tgUser.id) {
+                    playerTelegramId = tgUser.id.toString();
+                    document.getElementById('playerAccId').innerText = "ID: #" + playerTelegramId;
+                }
+                if (tgUser.photo_url) {
+                    userProfile.avatar = tgUser.photo_url;
+                }
+            } else {
+                playerTelegramId = Math.floor(100000 + Math.random() * 900000).toString();
+                document.getElementById('playerAccId').innerText = "ID: #" + playerTelegramId;
+            }
+            
+            document.getElementById('headerPlayerName').innerText = userProfile.name;
+            document.getElementById('headerAvatar').src = userProfile.avatar;
+            document.getElementById('settingsAvatarPreview').src = userProfile.avatar;
+
+            document.getElementById('referralLinkInput').value = `https://t.me/YourBotName/app?start=ref_${playerTelegramId}`;
+            checkReferralOnStart();
+        }
+
+        function checkReferralOnStart() {
+            let startParam = "";
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
+                startParam = window.Telegram.WebApp.initDataUnsafe.start_param;
+            }
+            
+            let hasBeenReferred = localStorage.getItem('referred_status');
+            if (startParam && startParam.startsWith("ref_") && !hasBeenReferred) {
+                let inviterId = startParam.replace("ref_", "");
+                if (inviterId !== playerTelegramId) {
+                    userChances += 1;
+                    localStorage.setItem('referred_status', 'true');
+                    setTimeout(() => {
+                        openAlert(`Welcome! You were invited by user #${inviterId}. +1 Free Chance added! 🎁`, "Referral Bonus");
+                    }, 1000);
+                }
+            }
+        }
+
+        function toggleMenu() {
+            let menu = document.getElementById('dropdownMenu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.matches('.menu-btn')) {
+                let dropdowns = document.getElementsByClassName("dropdown-menu");
+                for (let i = 0; i < dropdowns.length; i++) {
+                    let openDropdown = dropdowns[i];
+                    if (openDropdown.style.display === 'block') { openDropdown.style.display = 'none'; }
+                }
+            }
+        }
+
+        function openAlert(htmlContent, title = "Info") {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalText').innerHTML = htmlContent;
+            document.getElementById('generalModal').style.display = 'flex';
+            let menu = document.getElementById('dropdownMenu');
+            if(menu) menu.style.display = 'none';
+        }
+
+        function closeModal() { document.getElementById('generalModal').style.display = 'none'; }
+
+        function openAboutModal() {
+            let aboutHtml = `
+                <p><b>🌟 Welcome to Global Lucky Draw!</b></p>
+                <p>Global Lucky Draw is a secure and transparent crypto-gaming platform built for Telegram users worldwide.</p>
+                
+                <p><b>🏆 Reward Distribution (Every Friday 21:00 TR):</b></p>
+                <ul style="padding-left: 15px; margin: 5px 0;">
+                    <li><b>90%</b> goes directly to the Weekly Grand Winner's TON Wallet!</li>
+                    <li><b>5%</b> goes to platform development and support (Your share).</li>
+                    <li><b>5%</b> rolls over into next week's initial Prize Pool base!</li>
+                </ul>
+            `;
+            openAlert(aboutHtml, "About Game");
+        }
+
+        function openSettingsModal() {
+            document.getElementById('inputPlayerName').value = userProfile.name;
+            document.getElementById('inputPlayerAge').value = userProfile.age;
+            document.getElementById('selectPlayerGender').value = userProfile.gender;
+            document.getElementById('inputTonWallet').value = userProfile.wallet;
+            document.getElementById('settingsAvatarPreview').src = userProfile.avatar;
+            tempNewAvatar = userProfile.avatar;
+            
+            document.getElementById('settingsModal').style.display = 'flex';
+            document.getElementById('dropdownMenu').style.display = 'none';
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+
+        function openReferralModal() {
+            document.getElementById('referralModal').style.display = 'flex';
+            document.getElementById('dropdownMenu').style.display = 'none';
+        }
+
+        function closeReferralModal() {
+            document.getElementById('referralModal').style.display = 'none';
+        }
+
+        function copyReferralLink() {
+            let linkInput = document.getElementById('referralLinkInput');
+            linkInput.select();
+            linkInput.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(linkInput.value);
+            openAlert("Invite link copied to clipboard! Share it with your friends. 📋", "Success");
+        }
+
+        function previewGalleryImage(event) {
+            let file = event.target.files[0];
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    tempNewAvatar = e.target.result;
+                    document.getElementById('settingsAvatarPreview').src = tempNewAvatar;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function saveSettings() {
+            let newName = document.getElementById('inputPlayerName').value.trim();
+            let newAge = document.getElementById('inputPlayerAge').value.trim();
+            let newGender = document.getElementById('selectPlayerGender').value;
+            let newWallet = document.getElementById('inputTonWallet').value.trim();
+            let refCodeInput = document.getElementById('inputRefCode').value.trim();
+
+            if (newName) {
+                userProfile.name = newName;
+                document.getElementById('headerPlayerName').innerText = newName;
+            }
+            if (newAge) userProfile.age = newAge;
+            userProfile.gender = newGender;
+            userProfile.wallet = newWallet;
+            
+            if (tempNewAvatar) {
+                userProfile.avatar = tempNewAvatar;
+            }
+
+            if (refCodeInput && !localStorage.getItem('referred_status')) {
+                userChances += 1;
+                localStorage.setItem('referred_status', 'true');
+                openAlert(`Referral code registered! +1 Chance added for using inviter #${refCodeInput} 🎉`, "Bonus Added");
+            }
+            
+            document.getElementById('headerAvatar').src = userProfile.avatar;
+            updateUI();
+            closeSettingsModal();
+            openAlert("Your profile settings and wallet have been saved successfully! ✅", "Saved");
+        }
+
+        function watchAd() {
+            if (typeof window.Adsgram !== 'undefined') {
+                let adController = window.Adsgram.init({ blockId: "YOUR_ADSGRAM_BLOCK_ID" });
+                adController.show().then(() => {
+                    grantAdReward();
+                }).catch((result) => {
+                    openAlert("Ad was skipped or failed to load. Please try again.", "Notice");
+                });
+            } else {
+                openAlert("Simulating ad view (Test Mode)... 📺", "Ad Playing");
+                setTimeout(() => {
+                    grantAdReward();
+                }, 1200);
+            }
+        }
+
+        function grantAdReward() {
+            userChances += 1;
+            updateUI();
+            openAlert(`Ad watched successfully! +1 Chance added. 🎉`, "Reward Granted!");
+        }
+
+        function openWheelModal() {
+            document.getElementById('wheelModal').style.display = 'flex';
+        }
+        function closeWheelModal() {
+            document.getElementById('wheelModal').style.display = 'none';
+        }
+
+        function playWheelSound() {
+            try {
+                let ctx = new (window.AudioContext || window.webkitAudioContext)();
+                let osc = ctx.createOscillator();
+                let gain = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.1);
+            } catch(e) {}
+        }
+
+        function spinTheWheel() {
+            let spinBtn = document.getElementById('spinActionBtn');
+            spinBtn.disabled = true;
+            spinBtn.style.opacity = "0.5";
+
+            let wheel = document.getElementById('bigWheel');
+            let chosenDegree;
+            let rewardType = "";
+            let rand = Math.random() * 100;
+
+            if (rand < 5) {
+                chosenDegree = 330;
+                rewardType = "+5";
+            } else if (rand < 20) {
+                chosenDegree = 150;
+                rewardType = "+2";
+            } else if (rand < 55) {
+                chosenDegree = Math.random() > 0.5 ? 90 : 270;
+                rewardType = "+1";
+            } else {
+                chosenDegree = Math.random() > 0.5 ? 30 : 210;
+                rewardType = "pooch";
+            }
+
+            let totalTurns = 360 * 6;
+            let targetRotation = totalTurns + (360 - chosenDegree);
+            wheel.style.transform = `rotate(${targetRotation}deg)`;
+
+            let soundInterval = setInterval(playWheelSound, 200);
+
+            setTimeout(() => {
+                clearInterval(soundInterval);
+
+                if (rewardType === "+5") {
+                    userChances += 5;
+                    openAlert("INCREDIBLE! You hit the ULTRA RARE +5 Chances segment! 🎉💎", "Jackpot!");
+                } else if (rewardType === "+2") {
+                    userChances += 2;
+                    openAlert("Awesome! You won +2 Chances (Weekly Special)! 🚀", "Lucky Spin");
+                } else if (rewardType === "+1") {
+                    userChances += 1;
+                    openAlert("Good job! You won +1 Chance! 🎯", "Lucky Spin");
+                } else {
+                    openAlert("Oops! It landed on Pooch (Miss). Try again later! 😅", "Lucky Spin");
+                }
+
+                updateUI();
+                spinBtn.disabled = false;
+                spinBtn.style.opacity = "1";
+                closeWheelModal();
+                setTimeout(() => { wheel.style.transform = "rotate(0deg)"; }, 500);
+            }, 4000);
+        }
+
+        // عملکرد خرید شانس و اعمال فرمول مالی (افزایش استخر، سهم شما و سهم هفته بعد)
+        function buyChance() {
+            userChances += 1;
+            
+            // فرض بر این است که هر خرید معادل 0.65 دلار به استخر اضافه می‌کند
+            let purchaseAmount = 0.65;
+            totalPrizePoolUSD += purchaseAmount;
+            
+            // تفکیک ۵٪ سهم شما و ۵٪ سهم هفته بعد
+            developerEarningsUSD += (purchaseAmount * 0.05);
+            nextWeekRolloverUSD += (purchaseAmount * 0.05);
+
+            updateUI();
+            openAlert("Payment successful via connected Telegram Wallet! +1 Chance added.", "Purchase Success");
+        }
+
+        function startPlay() {
+            if (userChances <= 0) {
+                openAlert("You don't have enough chances! Buy more or watch ads.", "No Chances");
+                return;
+            }
+
+            userChances--;
+            updateUI();
+
+            let playBtn = document.getElementById('playBtn');
+            playBtn.disabled = true;
+
+            let boxes = document.getElementsByClassName('digit-box');
+            let counter = 0;
+
+            let interval = setInterval(() => {
+                for (let i = 0; i < 9; i++) {
+                    boxes[i].innerText = Math.floor(Math.random() * 10);
+                }
+                counter++;
+                if (counter > 15) {
+                    clearInterval(interval);
+                    
+                    let finalNumber = generateUnique9DigitCode();
+                    for (let i = 0; i < 9; i++) {
+                        boxes[i].innerText = finalNumber[i];
+                    }
+
+                    collectedCodes.push(finalNumber);
+                    updateCollectedList();
+                    playBtn.disabled = false;
+                }
+            }, 100);
+        }
+
+        function generateUnique9DigitCode() {
+            let code = "";
+            do {
+                code = Math.floor(100000000 + Math.random() * 900000000).toString();
+            } while (globalUsedCodes.has(code));
+            globalUsedCodes.add(code);
+            return code;
+        }
+
+        function updateCollectedList() {
+            let listDiv = document.getElementById('collectedList');
+            if (collectedCodes.length === 0) {
+                listDiv.innerHTML = '<div style="color: #4b5563; font-style: italic; margin-top: 15px;">No codes yet</div>';
+                return;
+            }
+            listDiv.innerHTML = "";
+            collectedCodes.forEach(code => {
+                let div = document.createElement('div');
+                div.className = 'collected-item';
+                div.innerText = code;
+                listDiv.appendChild(div);
+            });
+        }
+
+        function updateUI() {
+            document.getElementById('chanceBalance').innerText = userChances;
+            document.getElementById('prizePoolDisplay').innerText = "$" + totalPrizePoolUSD.toFixed(2) + " USDT";
+            
+            let walletStatus = document.getElementById('walletStatusText');
+            if (userProfile.wallet) {
+                let shortWallet = userProfile.wallet.substring(0, 4) + "..." + userProfile.wallet.slice(-4);
+                walletStatus.innerHTML = `Wallet: <span style="color: #fbbf24;">${shortWallet}</span>`;
+            } else {
+                walletStatus.innerHTML = `Wallet: <span style="color: #ef4444;">Not Connected</span>`;
+            }
+        }
+
+        initTelegramUser();
+        updateUI();
+        startCountdownTimer();
+    </script>
+</body>
+</html>
