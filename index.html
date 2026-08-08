@@ -243,7 +243,6 @@
                 </div>
             </div>
 
-            <!-- دکمه منوی کشویی تاریخچه و برندگان از سمت راست -->
             <button class="history-drawer-btn" onclick="toggleHistoryDrawer()">🏆 Past Winners</button>
 
             <div class="profile-box">
@@ -280,7 +279,7 @@
             <div class="pool-box">
                 <div class="pool-title">Weekly Prize Pool</div>
                 <div class="pool-value" id="prizePoolDisplay">$1,250.00 USDT</div>
-                <div style="font-size: 8px; color: var(--accent-blue); margin-top: 2px;" id="walletStatusText">Wallet: Not Connected</div>
+                <div style="font-size: 8px; color: var(--accent-blue); margin-top: 2px;" id="walletStatusText">Owner Wallet: Connected</div>
             </div>
             <button class="play-btn" id="playBtn" onclick="startPlay()">PLAY</button>
         </div>
@@ -297,13 +296,12 @@
                 <div class="timer-text">
                     Friday 21:00 (TR)<br>
                     <div class="countdown-digits" id="countdownTimer">00d 00h 00m 00s</div><br>
-                    <span style="font-size: 9px; color: #10b981;">90% Win | 5% You | 5% Next</span>
+                    <span style="font-size: 9px; color: #10b981;">Owner Managed Platform</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- منوی کشویی از راست (تاریخچه برندگان، کدهای ۹ رقمی و جوایز) -->
     <div class="drawer-overlay" id="drawerOverlay" onclick="toggleHistoryDrawer()"></div>
     <div class="right-drawer" id="rightDrawer">
         <div class="drawer-header">
@@ -318,23 +316,12 @@
                     👤 Winner: <b>Alex_Crypto</b><br>
                     🆔 Account ID: #884920<br>
                     🎁 Prize (90%): <span style="color: #10b981; font-weight: bold;">$1,125.00 USDT</span><br>
-                    💼 Wallet: EQD4...91x
-                </div>
-            </div>
-            <div class="history-item">
-                <div class="history-week">Week #31</div>
-                <div class="history-code">104928371</div>
-                <div class="history-winner-info">
-                    👤 Winner: <b>Sara_Gamer</b><br>
-                    🆔 Account ID: #551029<br>
-                    🎁 Prize (90%): <span style="color: #10b981; font-weight: bold;">$950.00 USDT</span><br>
-                    💼 Wallet: EQB2...33a
+                    💼 Wallet: UQCz...6bpQu
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- پاپ‌آپ تنظیمات -->
     <div class="modal" id="settingsModal">
         <div class="settings-modal-content">
             <div class="settings-header">
@@ -369,11 +356,6 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Telegram TON Wallet Address</label>
-                <input type="text" class="form-input" id="inputTonWallet" placeholder="EQD... (Your TON Wallet)">
-            </div>
-
-            <div class="form-group">
                 <label class="form-label">Referral Code (Invited By)</label>
                 <input type="text" class="form-input" id="inputRefCode" placeholder="Enter friend's ID code">
             </div>
@@ -382,7 +364,6 @@
         </div>
     </div>
 
-    <!-- پاپ‌آپ دعوت دوستان -->
     <div class="modal" id="referralModal">
         <div class="settings-modal-content" style="text-align: center;">
             <div class="settings-header">
@@ -400,12 +381,11 @@
         </div>
     </div>
 
-    <!-- پاپ‌آپ چرخ شانس -->
     <div class="modal" id="wheelModal">
         <div class="wheel-modal-content">
             <button class="close-modal-btn" onclick="closeWheelModal()">×</button>
             <h3 style="color: var(--accent-gold); margin-top: 5px; font-size: 19px; text-transform: uppercase;">Daily Lucky Wheel</h3>
-            <div class="wheel-timer" id="wheelTimerText">Spin Anytime (Test Mode)</div>
+            <div class="wheel-timer" id="wheelTimerText">Spin Anytime</div>
             
             <div class="big-wheel-container">
                 <div class="wheel-pointer"></div>
@@ -424,7 +404,6 @@
         </div>
     </div>
 
-    <!-- پاپ‌آپ هشدار عمومی -->
     <div class="modal" id="generalModal">
         <div class="general-modal-content">
             <h3 id="modalTitle" style="color: var(--accent-gold); margin-top: 0;">Notice</h3>
@@ -434,6 +413,9 @@
     </div>
 
     <script>
+        const OWNER_WALLET = "UQCzEzmgeMFDr0ANrzbadZu7yqD1Aob9tFL3S101CIU6bpQu";
+        const AD_BLOCK_ID = "41904";
+
         let userChances = 2;
         let collectedCodes = [];
         let globalUsedCodes = new Set();
@@ -447,7 +429,6 @@
             name: "Ahmad Warrior",
             age: "25",
             gender: "Male",
-            wallet: "",
             avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100"
         };
 
@@ -574,7 +555,7 @@
                 <p><b>🏆 Reward Distribution (Every Friday 21:00 TR):</b></p>
                 <ul style="padding-left: 15px; margin: 5px 0;">
                     <li><b>90%</b> goes directly to the Weekly Grand Winner's TON Wallet!</li>
-                    <li><b>5%</b> goes to platform development and support (Your share).</li>
+                    <li><b>5%</b> goes to platform development and support (Owner share).</li>
                     <li><b>5%</b> rolls over into next week's initial Prize Pool base!</li>
                 </ul>
             `;
@@ -585,7 +566,6 @@
             document.getElementById('inputPlayerName').value = userProfile.name;
             document.getElementById('inputPlayerAge').value = userProfile.age;
             document.getElementById('selectPlayerGender').value = userProfile.gender;
-            document.getElementById('inputTonWallet').value = userProfile.wallet;
             document.getElementById('settingsAvatarPreview').src = userProfile.avatar;
             tempNewAvatar = userProfile.avatar;
             
@@ -630,7 +610,6 @@
             let newName = document.getElementById('inputPlayerName').value.trim();
             let newAge = document.getElementById('inputPlayerAge').value.trim();
             let newGender = document.getElementById('selectPlayerGender').value;
-            let newWallet = document.getElementById('inputTonWallet').value.trim();
             let refCodeInput = document.getElementById('inputRefCode').value.trim();
 
             if (newName) {
@@ -639,7 +618,6 @@
             }
             if (newAge) userProfile.age = newAge;
             userProfile.gender = newGender;
-            userProfile.wallet = newWallet;
             
             if (tempNewAvatar) {
                 userProfile.avatar = tempNewAvatar;
@@ -654,22 +632,22 @@
             document.getElementById('headerAvatar').src = userProfile.avatar;
             updateUI();
             closeSettingsModal();
-            openAlert("Your profile settings and wallet have been saved successfully! ✅", "Saved");
+            openAlert("Your profile settings have been saved successfully! ✅", "Saved");
         }
 
+        // ==========================================
+        // بخش تبلیغات واقعی با Adsgram (شناسه 41904)
+        // ==========================================
         function watchAd() {
             if (typeof window.Adsgram !== 'undefined') {
-                let adController = window.Adsgram.init({ blockId: "YOUR_ADSGRAM_BLOCK_ID" });
+                let adController = window.Adsgram.init({ blockId: AD_BLOCK_ID });
                 adController.show().then(() => {
                     grantAdReward();
                 }).catch((result) => {
                     openAlert("Ad was skipped or failed to load. Please try again.", "Notice");
                 });
             } else {
-                openAlert("Simulating ad view (Test Mode)... 📺", "Ad Playing");
-                setTimeout(() => {
-                    grantAdReward();
-                }, 1200);
+                openAlert("Adsgram SDK is not loaded. Please ensure you are inside Telegram.", "Error");
             }
         }
 
@@ -765,7 +743,7 @@
             nextWeekRolloverUSD += (purchaseAmount * 0.05);
 
             updateUI();
-            openAlert("Payment successful via connected Telegram Wallet! +1 Chance added.", "Purchase Success");
+            openAlert(`Payment processed successfully to Owner Wallet!<br><small style="color:var(--accent-blue);">${OWNER_WALLET.substring(0,6)}...${OWNER_WALLET.slice(-6)}</small><br>+1 Chance added.`, "Purchase Success");
         }
 
         function startPlay() {
@@ -832,12 +810,8 @@
             document.getElementById('prizePoolDisplay').innerText = "$" + totalPrizePoolUSD.toFixed(2) + " USDT";
             
             let walletStatus = document.getElementById('walletStatusText');
-            if (userProfile.wallet) {
-                let shortWallet = userProfile.wallet.substring(0, 4) + "..." + userProfile.wallet.slice(-4);
-                walletStatus.innerHTML = `Wallet: <span style="color: #fbbf24;">${shortWallet}</span>`;
-            } else {
-                walletStatus.innerHTML = `Wallet: <span style="color: #ef4444;">Not Connected</span>`;
-            }
+            let shortWallet = OWNER_WALLET.substring(0, 4) + "..." + OWNER_WALLET.slice(-4);
+            walletStatus.innerHTML = `Owner Wallet: <span style="color: #fbbf24;">${shortWallet}</span>`;
         }
 
         initTelegramUser();
@@ -845,4 +819,4 @@
         startCountdownTimer();
     </script>
 </body>
-</html>
+            </html>
