@@ -278,7 +278,7 @@
         <div class="middle-row">
             <div class="pool-box">
                 <div class="pool-title">Weekly Prize Pool</div>
-                <div class="pool-value" id="prizePoolDisplay">$1,250.00 USDT</div>
+                <div class="pool-value" id="prizePoolDisplay">$0.00 USDT</div>
                 <div style="font-size: 8px; color: var(--accent-blue); margin-top: 2px;" id="walletStatusText">Owner Wallet: Connected</div>
             </div>
             <button class="play-btn" id="playBtn" onclick="startPlay()">PLAY</button>
@@ -309,15 +309,8 @@
             <button class="drawer-close" onclick="toggleHistoryDrawer()">×</button>
         </div>
         <div style="overflow-y: auto; flex-grow: 1; padding-right: 2px;">
-            <div class="history-item">
-                <div class="history-week">Week #32 (Previous)</div>
-                <div class="history-code">492018573</div>
-                <div class="history-winner-info">
-                    👤 Winner: <b>Alex_Crypto</b><br>
-                    🆔 Account ID: #884920<br>
-                    🎁 Prize (90%): <span style="color: #10b981; font-weight: bold;">$1,125.00 USDT</span><br>
-                    💼 Wallet: UQCz...6bpQu
-                </div>
+            <div class="history-item" style="text-align: center; color: var(--text-sub); font-size: 11px; padding: 20px;">
+                No previous winners yet. First draw coming soon!
             </div>
         </div>
     </div>
@@ -420,9 +413,8 @@
         let collectedCodes = [];
         let globalUsedCodes = new Set();
         
-        let totalPrizePoolUSD = 1250.00; 
-        let developerEarningsUSD = 0.00; 
-        let nextWeekRolloverUSD = 0.00;  
+        // اصلاح مبلغ استخر جایزه به صورت واقعی و پیش‌فرض صفر
+        let totalPrizePoolUSD = 0.00; 
 
         let playerTelegramId = "948210";
         let userProfile = {
@@ -635,9 +627,7 @@
             openAlert("Your profile settings have been saved successfully! ✅", "Saved");
         }
 
-        // ==========================================
-        // بخش تبلیغات واقعی با Adsgram (شناسه 41904)
-        // ==========================================
+        // بخش تبلیغات واقعی با Adsgram
         function watchAd() {
             if (typeof window.Adsgram !== 'undefined') {
                 let adController = window.Adsgram.init({ blockId: AD_BLOCK_ID });
@@ -653,8 +643,9 @@
 
         function grantAdReward() {
             userChances += 1;
+            totalPrizePoolUSD += 0.10; // افزودن درآمد واقعی تبلیغ به استخر جایزه
             updateUI();
-            openAlert(`Ad watched successfully! +1 Chance added. 🎉`, "Reward Granted!");
+            openAlert(`Ad watched successfully! +1 Chance added and added to prize pool. 🎉`, "Reward Granted!");
         }
 
         function openWheelModal() {
@@ -735,15 +726,9 @@
             }, 4000);
         }
 
+        // اصلاح دکمه خرید تا به صورت پیش‌فرض اعلام اتصال درگاه کند و از کسر اشتباه جلوگیری نماید
         function buyChance() {
-            userChances += 1;
-            let purchaseAmount = 0.65;
-            totalPrizePoolUSD += purchaseAmount;
-            developerEarningsUSD += (purchaseAmount * 0.05);
-            nextWeekRolloverUSD += (purchaseAmount * 0.05);
-
-            updateUI();
-            openAlert(`Payment processed successfully to Owner Wallet!<br><small style="color:var(--accent-blue);">${OWNER_WALLET.substring(0,6)}...${OWNER_WALLET.slice(-6)}</small><br>+1 Chance added.`, "Purchase Success");
+            openAlert(`Wallet payment gateway is initializing...<br><br>To enable real cryptocurrency transactions (TON / USDT), TON Connect SDK integration is required.`, "Connect Wallet");
         }
 
         function startPlay() {
