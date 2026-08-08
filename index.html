@@ -438,10 +438,9 @@
         let collectedCodes = [];
         let globalUsedCodes = new Set();
         
-        // متغیرهای مالی استخر جوایز بر اساس درخواست شما
-        let totalPrizePoolUSD = 1250.00; // این مبلغ شامل ۵٪ باقی‌مانده از هفته قبل به عنوان پایه است
-        let developerEarningsUSD = 0.00; // سهم ۵ درصدی شما
-        let nextWeekRolloverUSD = 0.00;  // سهم ۵ درصدی برای هفته بعد
+        let totalPrizePoolUSD = 1250.00; 
+        let developerEarningsUSD = 0.00; 
+        let nextWeekRolloverUSD = 0.00;  
 
         let playerTelegramId = "948210";
         let userProfile = {
@@ -454,7 +453,6 @@
 
         let tempNewAvatar = "";
 
-        // تایمر معکوس زنده تا جمعه ساعت ۲۱:۰۰
         function startCountdownTimer() {
             function updateTimer() {
                 const now = new Date();
@@ -759,15 +757,10 @@
             }, 4000);
         }
 
-        // عملکرد خرید شانس و اعمال فرمول مالی (افزایش استخر، سهم شما و سهم هفته بعد)
         function buyChance() {
             userChances += 1;
-            
-            // فرض بر این است که هر خرید معادل 0.65 دلار به استخر اضافه می‌کند
             let purchaseAmount = 0.65;
             totalPrizePoolUSD += purchaseAmount;
-            
-            // تفکیک ۵٪ سهم شما و ۵٪ سهم هفته بعد
             developerEarningsUSD += (purchaseAmount * 0.05);
             nextWeekRolloverUSD += (purchaseAmount * 0.05);
 
