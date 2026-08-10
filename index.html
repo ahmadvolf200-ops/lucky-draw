@@ -6,9 +6,6 @@
     <title>GLOBAL LUCKY DRAW</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://sad.adsgram.ai/js/adsgram.min.js?v=1"></script>
-    <!-- اضافه کردن کتابخانه‌های Firebase برای دیتابیس ابری مشترک -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         :root {
             --bg-color: #050811;
@@ -281,7 +278,7 @@
         <div class="middle-row">
             <div class="pool-box">
                 <div class="pool-title">Weekly Prize Pool</div>
-                <div class="pool-value" id="prizePoolDisplay">$0.00 USDT</div>
+                <div class="pool-value" id="prizePoolDisplay">Loading...</div>
                 <div style="font-size: 8px; color: var(--accent-blue); margin-top: 2px;" id="walletStatusText">Owner Wallet: Connected</div>
             </div>
             <button class="play-btn" id="playBtn" onclick="startPlay()">PLAY</button>
@@ -409,15 +406,6 @@
     </div>
 
     <script>
-        // تنظیمات اتصال به دیتابیس ابری رایگان Firebase برای همگام‌سازی استخر جایزه بین تمام گوشی‌ها
-        const firebaseConfig = {
-            databaseURL: "https://global-lucky-draw-default-rtdb.firebaseio.com/"
-        };
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const dbRef = firebase.database().ref('global_prize_pool');
-
         const OWNER_WALLET = "UQCzEzmgeMFDr0ANrzbadZu7yqD1Aob9tFL3S101CIU6bpQu";
         const AD_BLOCK_ID = "41904";
 
@@ -436,19 +424,27 @@
 
         let tempNewAvatar = "";
 
-        // گوش دادن به تغییرات ابری استخر جایزه به صورت کاملاً زنده (Real-time Sync)
-        dbRef.on('value', (snapshot) => {
-            let serverPool = snapshot.val();
-            if (serverPool !== null) {
-                totalPrizePoolUSD = parseFloat(serverPool);
-                document.getElementById('prizePoolDisplay').innerText = "$" + totalPrizePoolUSD.toFixed(2) + " USDT";
+        // اتصال به بلاکچین TON برای استعلام موجودی واقعی کیف پول شما
+        async function fetchOwnerWalletBalance() {
+            try {
+                // استفاده از TON Center API v2 برای دریافت موجودی کیف پول
+                let response = await fetch(`https://toncenter.com/api/v2/getAddressBalance?address=${OWNER_WALLET}`);
+                let data = await response.json();
+                
+                if (data.ok && data.result) {
+                    // موجودی به نانو-تن (nanoton) برمی‌گردد؛ تبدیل به تن (TON)
+                    let balanceInNano = parseInt(data.result);
+                    let balanceInTon = balanceInNano / 1000000000;
+                    
+                    // فرض قیمت هر TON معادل ۵.۵ دلار (یا نمایش به صورت معادل دلاری استخر جایزه)
+                    totalPrizePoolUSD = balanceInTon * 5.5; 
+                    
+                    document.getElementById('prizePoolDisplay').innerText = "$" + totalPrizePoolUSD.toFixed(2) + " USDT";
+                }
+            } catch (e) {
+                // در صورت قطعی اینترنت یا خطا، آخرین مقدار معتبر نمایش داده می‌شود
+                console.log("Error fetching wallet balance:", e);
             }
-        });
-
-        function updateCloudPool(newAmount) {
-            totalPrizePoolUSD = newAmount;
-            dbRef.set(totalPrizePoolUSD.toFixed(2));
-            document.getElementById('prizePoolDisplay').innerText = "$" + totalPrizePoolUSD.toFixed(2) + " USDT";
         }
 
         function loadUserData() {
@@ -697,10 +693,9 @@
 
         function grantAdReward() {
             userChances += 1;
-            updateCloudPool(totalPrizePoolUSD + 0.10); // افزایش ابری مبلغ جایزه
             saveUserData();
             updateUI();
-            openAlert(`Ad watched successfully! +1 Chance added and added to prize pool. 🎉`, "Reward Granted!");
+            openAlert(`Ad watched successfully! +1 Chance added. 🎉`, "Reward Granted!");
         }
 
         function openWheelModal() {
@@ -796,7 +791,6 @@
 
         function simulateSuccessfulPayment() {
             userChances += 1;
-            updateCloudPool(totalPrizePoolUSD + 0.65); // افزایش ابری مبلغ جایزه هنگام خرید
             saveUserData();
             updateUI();
             closeModal();
@@ -866,7 +860,6 @@
 
         function updateUI() {
             document.getElementById('chanceBalance').innerText = userChances;
-            document.getElementById('prizePoolDisplay').innerText = "$" + totalPrizePoolUSD.toFixed(2) + " USDT";
             
             let walletStatus = document.getElementById('walletStatusText');
             let shortWallet = OWNER_WALLET.substring(0, 4) + "..." + OWNER_WALLET.slice(-4);
@@ -874,9 +867,16 @@
             updateCollectedList();
         }
 
+        // مقداردهی اولیه و چک کردن بلاکچین
         initTelegramUser();
         updateUI();
         startCountdownTimer();
+
+        // دریافت اولیه موجودی کیف پول از بلاکچین
+        fetchOwnerWalletBalance();
+
+        // تنظیم خودکار چک کردن موجودی کیف پول هر ۵ دقیقه (۳۰۰,۰۰۰ میلی‌ثانیه)
+        setInterval(fetchOwnerWalletBalance, 300000);
     </script>
 </body>
 </html>
