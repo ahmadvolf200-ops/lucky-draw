@@ -6,6 +6,8 @@
     <title>GLOBAL LUCKY DRAW</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://sad.adsgram.ai/js/adsgram.min.js?v=1"></script>
+    <!-- اضافه کردن TON Connect SDK برای اتصال واقعی کیف پول -->
+    <script src="https://unpkg.com/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
     <style>
         :root {
             --bg-color: #050811;
@@ -262,7 +264,7 @@
             <div class="balance-display">
                 <div class="balance-title">Chances & Wallet</div>
                 <div class="balance-value" id="chanceBalance">2</div>
-                <button class="buy-chance-btn" onclick="buyChance()">Buy (20 TL)</button>
+                <button class="buy-chance-btn" onclick="buyChance()">Connect Wallet & Buy</button>
             </div>
         </div>
 
@@ -278,7 +280,7 @@
         <div class="middle-row">
             <div class="pool-box">
                 <div class="pool-title">Weekly Prize Pool</div>
-                <div class="pool-value" id="prizePoolDisplay">Loading...</div>
+                <div class="pool-value" id="prizePoolDisplay">Connecting Wallet...</div>
                 <div style="font-size: 8px; color: var(--accent-blue); margin-top: 2px;" id="walletStatusText">Owner Wallet: Connected</div>
             </div>
             <button class="play-btn" id="playBtn" onclick="startPlay()">PLAY</button>
@@ -424,26 +426,59 @@
 
         let tempNewAvatar = "";
 
-        // اتصال به بلاکچین TON برای استعلام موجودی واقعی کیف پول شما
+        // راه‌اندازی TonConnect برای اتصال واقعی کیف پول
+        const tonConnectUI = new TON_CONNECT_SDK.TonConnect({
+            manifestUrl: 'https://raw.githubusercontent.com/ton-connect/sdk/master/packages/sdk/demo/public/tonconnect-manifest.json'
+        });
+
+        // استعلام واقعی موجودی کیف پول مالک از شبکه بلاکچین TON
         async function fetchOwnerWalletBalance() {
             try {
-                // استفاده از TON Center API v2 برای دریافت موجودی کیف پول
                 let response = await fetch(`https://toncenter.com/api/v2/getAddressBalance?address=${OWNER_WALLET}`);
                 let data = await response.json();
                 
                 if (data.ok && data.result) {
-                    // موجودی به نانو-تن (nanoton) برمی‌گردد؛ تبدیل به تن (TON)
                     let balanceInNano = parseInt(data.result);
                     let balanceInTon = balanceInNano / 1000000000;
-                    
-                    // فرض قیمت هر TON معادل ۵.۵ دلار (یا نمایش به صورت معادل دلاری استخر جایزه)
+                    // تبدیل موجودی TON به دلار (محاسبه خودکار استخر جایزه بر اساس موجودی واقعی کیف پول شما)
                     totalPrizePoolUSD = balanceInTon * 5.5; 
-                    
                     document.getElementById('prizePoolDisplay').innerText = "$" + totalPrizePoolUSD.toFixed(2) + " USDT";
                 }
             } catch (e) {
-                // در صورت قطعی اینترنت یا خطا، آخرین مقدار معتبر نمایش داده می‌شود
-                console.log("Error fetching wallet balance:", e);
+                document.getElementById('prizePoolDisplay').innerText = "$0.00 USDT";
+            }
+        }
+
+        // عملکرد دکمه خرید با اتصال واقعی کیف پول
+        async function buyChance() {
+            try {
+                if (!tonConnectUI.connected) {
+                    openAlert("Please connect your wallet first to proceed with the secure payment.", "Wallet Required");
+                    await tonConnectUI.openModal();
+                    return;
+                }
+
+                // ساخت تراکنش واقعی جهت ارسال به کیف پول مالک
+                const transaction = {
+                    validUntil: Math.floor(Date.now() / 1000) + 360,
+                    messages: [
+                        {
+                            address: OWNER_WALLET,
+                            amount: "1000000000" // معادل ۱ تن (قابل تنظیم)
+                        }
+                    ]
+                };
+
+                let result = await tonConnectUI.send(transaction);
+                if (result) {
+                    userChances += 1;
+                    saveUserData();
+                    updateUI();
+                    openAlert("Transaction successful! +1 Chance added to your account. 🎉", "Payment Success");
+                    fetchOwnerWalletBalance(); // آپدیت آنی موجودی کیف پول شما
+                }
+            } catch (e) {
+                openAlert("Transaction cancelled or failed.", "Payment Error");
             }
         }
 
@@ -777,26 +812,6 @@
             }, 4000);
         }
 
-        function buyChance() {
-            let paymentInfoHtml = `
-                <p><b>💳 Buy Chance (20 TL / USDT equivalent)</b></p>
-                <p>To purchase chances, transfer funds to the Owner Wallet below and keep your transaction hash:</p>
-                <div style="background:#030712; padding:8px; border-radius:6px; font-family:monospace; font-size:11px; color:var(--accent-gold); word-break:break-all; margin:10px 0;">
-                    ${OWNER_WALLET}
-                </div>
-                <button class="save-settings-btn" onclick="simulateSuccessfulPayment()">I Have Paid (+1 Chance) ✅</button>
-            `;
-            openAlert(paymentInfoHtml, "Wallet Payment");
-        }
-
-        function simulateSuccessfulPayment() {
-            userChances += 1;
-            saveUserData();
-            updateUI();
-            closeModal();
-            openAlert("Payment verified! +1 Chance has been added to your account. 🎉", "Success");
-        }
-
         function startPlay() {
             if (userChances <= 0) {
                 openAlert("You don't have enough chances! Buy more or watch ads.", "No Chances");
@@ -867,15 +882,14 @@
             updateCollectedList();
         }
 
-        // مقداردهی اولیه و چک کردن بلاکچین
         initTelegramUser();
         updateUI();
         startCountdownTimer();
 
-        // دریافت اولیه موجودی کیف پول از بلاکچین
+        // استعلام اولیه موجودی کیف پول شما از بلاکچین
         fetchOwnerWalletBalance();
 
-        // تنظیم خودکار چک کردن موجودی کیف پول هر ۵ دقیقه (۳۰۰,۰۰۰ میلی‌ثانیه)
+        // به‌روزرسانی خودکار موجودی استخر جایزه از کیف پول شما هر ۵ دقیقه یک‌بار
         setInterval(fetchOwnerWalletBalance, 300000);
     </script>
 </body>
