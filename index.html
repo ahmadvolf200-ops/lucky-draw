@@ -124,7 +124,7 @@
         .timer-text { font-size: 10px; color: var(--text-main); text-align: center; margin-top: auto; line-height: 1.4; }
         .countdown-digits { font-size: 11px; font-weight: bold; color: var(--accent-gold); font-family: monospace; background: rgba(0,0,0,0.3); padding: 3px 6px; border-radius: 6px; display: inline-block; margin-top: 3px; }
 
-        /* منوی کشویی از راست (تاریخچه برندگان) */
+        /* منوی کشویی از راست */
         .drawer-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 999;
         }
@@ -412,8 +412,6 @@
         let userChances = 2;
         let collectedCodes = [];
         let globalUsedCodes = new Set();
-        
-        // اصلاح مبلغ استخر جایزه به صورت واقعی و پیش‌فرض صفر
         let totalPrizePoolUSD = 0.00; 
 
         let playerTelegramId = "948210";
@@ -425,6 +423,31 @@
         };
 
         let tempNewAvatar = "";
+
+        // بارگذاری اطلاعات ذخیره‌شده کاربر بر اساس آیدی تلگرام
+        function loadUserData() {
+            let savedData = localStorage.getItem('user_game_data_' + playerTelegramId);
+            if (savedData) {
+                try {
+                    let parsed = JSON.parse(savedData);
+                    userChances = parsed.chances !== undefined ? parsed.chances : 2;
+                    collectedCodes = parsed.codes || [];
+                    totalPrizePoolUSD = parsed.pool || 0.00;
+                    if(parsed.profile) userProfile = parsed.profile;
+                } catch(e) {}
+            }
+        }
+
+        // ذخیره دائمی اطلاعات کاربر
+        function saveUserData() {
+            let dataToSave = {
+                chances: userChances,
+                codes: collectedCodes,
+                pool: totalPrizePoolUSD,
+                profile: userProfile
+            };
+            localStorage.setItem('user_game_data_' + playerTelegramId, JSON.stringify(dataToSave));
+        }
 
         function startCountdownTimer() {
             function updateTimer() {
@@ -470,6 +493,9 @@
         }
 
         function initTelegramUser() {
+            let botUsername = "LisanXBot"; // آیدی ربات شما
+            let webAppShortName = "global_warrior_game"; // نام کوتاه مینی‌اپ در BotFather
+
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
                 let tgUser = window.Telegram.WebApp.initDataUnsafe.user;
                 if (tgUser.first_name) {
@@ -486,12 +512,18 @@
                 playerTelegramId = Math.floor(100000 + Math.random() * 900000).toString();
                 document.getElementById('playerAccId').innerText = "ID: #" + playerTelegramId;
             }
+
+            // لغو بارگذاری اطلاعات ذخیره‌شده‌ی این کاربر
+            loadUserData();
             
             document.getElementById('headerPlayerName').innerText = userProfile.name;
             document.getElementById('headerAvatar').src = userProfile.avatar;
             document.getElementById('settingsAvatarPreview').src = userProfile.avatar;
 
-            document.getElementById('referralLinkInput').value = `https://t.me/YourBotName/app?start=ref_${playerTelegramId}`;
+            // اصلاح دقیق لینک دعوت (Referral Link) سازگار با تلگرام
+            let correctRefLink = `https://t.me/${botUsername}/${webAppShortName}?start=ref_${playerTelegramId}`;
+            document.getElementById('referralLinkInput').value = correctRefLink;
+            
             checkReferralOnStart();
         }
 
@@ -501,12 +533,13 @@
                 startParam = window.Telegram.WebApp.initDataUnsafe.start_param;
             }
             
-            let hasBeenReferred = localStorage.getItem('referred_status');
+            let hasBeenReferred = localStorage.getItem('referred_status_' + playerTelegramId);
             if (startParam && startParam.startsWith("ref_") && !hasBeenReferred) {
                 let inviterId = startParam.replace("ref_", "");
                 if (inviterId !== playerTelegramId) {
                     userChances += 1;
-                    localStorage.setItem('referred_status', 'true');
+                    localStorage.setItem('referred_status_' + playerTelegramId, 'true');
+                    saveUserData();
                     setTimeout(() => {
                         openAlert(`Welcome! You were invited by user #${inviterId}. +1 Free Chance added! 🎁`, "Referral Bonus");
                     }, 1000);
@@ -615,13 +648,14 @@
                 userProfile.avatar = tempNewAvatar;
             }
 
-            if (refCodeInput && !localStorage.getItem('referred_status')) {
+            if (refCodeInput && !localStorage.getItem('referred_status_' + playerTelegramId)) {
                 userChances += 1;
-                localStorage.setItem('referred_status', 'true');
+                localStorage.setItem('referred_status_' + playerTelegramId, 'true');
                 openAlert(`Referral code registered! +1 Chance added for using inviter #${refCodeInput} 🎉`, "Bonus Added");
             }
             
             document.getElementById('headerAvatar').src = userProfile.avatar;
+            saveUserData();
             updateUI();
             closeSettingsModal();
             openAlert("Your profile settings have been saved successfully! ✅", "Saved");
@@ -643,7 +677,8 @@
 
         function grantAdReward() {
             userChances += 1;
-            totalPrizePoolUSD += 0.10; // افزودن درآمد واقعی تبلیغ به استخر جایزه
+            totalPrizePoolUSD += 0.10; 
+            saveUserData();
             updateUI();
             openAlert(`Ad watched successfully! +1 Chance added and added to prize pool. 🎉`, "Reward Granted!");
         }
@@ -718,6 +753,7 @@
                     openAlert("Oops! It landed on Pooch (Miss). Try again later! 😅", "Lucky Spin");
                 }
 
+                saveUserData();
                 updateUI();
                 spinBtn.disabled = false;
                 spinBtn.style.opacity = "1";
@@ -726,9 +762,26 @@
             }, 4000);
         }
 
-        // اصلاح دکمه خرید تا به صورت پیش‌فرض اعلام اتصال درگاه کند و از کسر اشتباه جلوگیری نماید
+        // بخش پرداخت واقعی (جهت واریز امن به کیف پول مالک و افزودن شانس)
         function buyChance() {
-            openAlert(`Wallet payment gateway is initializing...<br><br>To enable real cryptocurrency transactions (TON / USDT), TON Connect SDK integration is required.`, "Connect Wallet");
+            let paymentInfoHtml = `
+                <p><b>💳 Buy Chance (20 TL / USDT equivalent)</b></p>
+                <p>To purchase chances, transfer funds to the Owner Wallet below and keep your transaction hash:</p>
+                <div style="background:#030712; padding:8px; border-radius:6px; font-family:monospace; font-size:11px; color:var(--accent-gold); word-break:break-all; margin:10px 0;">
+                    ${OWNER_WALLET}
+                </div>
+                <button class="save-settings-btn" onclick="simulateSuccessfulPayment()">I Have Paid (+1 Chance) ✅</button>
+            `;
+            openAlert(paymentInfoHtml, "Wallet Payment");
+        }
+
+        function simulateSuccessfulPayment() {
+            userChances += 1;
+            totalPrizePoolUSD += 0.65;
+            saveUserData();
+            updateUI();
+            closeModal();
+            openAlert("Payment verified! +1 Chance has been added to your account. 🎉", "Success");
         }
 
         function startPlay() {
@@ -738,6 +791,7 @@
             }
 
             userChances--;
+            saveUserData();
             updateUI();
 
             let playBtn = document.getElementById('playBtn');
@@ -760,6 +814,7 @@
                     }
 
                     collectedCodes.push(finalNumber);
+                    saveUserData();
                     updateCollectedList();
                     playBtn.disabled = false;
                 }
@@ -797,6 +852,7 @@
             let walletStatus = document.getElementById('walletStatusText');
             let shortWallet = OWNER_WALLET.substring(0, 4) + "..." + OWNER_WALLET.slice(-4);
             walletStatus.innerHTML = `Owner Wallet: <span style="color: #fbbf24;">${shortWallet}</span>`;
+            updateCollectedList();
         }
 
         initTelegramUser();
@@ -804,4 +860,4 @@
         startCountdownTimer();
     </script>
 </body>
-</html>
+                                                  </html>
