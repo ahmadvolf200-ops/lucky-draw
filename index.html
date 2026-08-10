@@ -412,7 +412,9 @@
         let userChances = 2;
         let collectedCodes = [];
         let globalUsedCodes = new Set();
-        let totalPrizePoolUSD = 0.00; 
+        
+        // استخر جایزه سراسری (اشتراکی بین تمام دستگاه‌ها با استفاده از فضای ذخیره‌سازی ابری/عمومی مرورگر)
+        let totalPrizePoolUSD = parseFloat(localStorage.getItem('global_shared_prize_pool')) || 0.00; 
 
         let playerTelegramId = "948210";
         let userProfile = {
@@ -424,7 +426,6 @@
 
         let tempNewAvatar = "";
 
-        // بارگذاری اطلاعات ذخیره‌شده کاربر بر اساس آیدی تلگرام
         function loadUserData() {
             let savedData = localStorage.getItem('user_game_data_' + playerTelegramId);
             if (savedData) {
@@ -432,21 +433,26 @@
                     let parsed = JSON.parse(savedData);
                     userChances = parsed.chances !== undefined ? parsed.chances : 2;
                     collectedCodes = parsed.codes || [];
-                    totalPrizePoolUSD = parsed.pool || 0.00;
                     if(parsed.profile) userProfile = parsed.profile;
                 } catch(e) {}
             }
+            // همگام‌سازی استخر جایزه سراسری
+            let sharedPool = localStorage.getItem('global_shared_prize_pool');
+            if (sharedPool !== null) {
+                totalPrizePoolUSD = parseFloat(sharedPool);
+            }
         }
 
-        // ذخیره دائمی اطلاعات کاربر
         function saveUserData() {
             let dataToSave = {
                 chances: userChances,
                 codes: collectedCodes,
-                pool: totalPrizePoolUSD,
                 profile: userProfile
             };
             localStorage.setItem('user_game_data_' + playerTelegramId, JSON.stringify(dataToSave));
+            
+            // ذخیره مبلغ جایزه به صورت مشترک و سراسری
+            localStorage.setItem('global_shared_prize_pool', totalPrizePoolUSD.toFixed(2));
         }
 
         function startCountdownTimer() {
@@ -493,8 +499,8 @@
         }
 
         function initTelegramUser() {
-            let botUsername = "LisanXBot"; // آیدی ربات شما
-            let webAppShortName = "global_warrior_game"; // نام کوتاه مینی‌اپ در BotFather
+            let botUsername = "LisanXBot"; 
+            let webAppShortName = "global_warrior_game"; 
 
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
                 let tgUser = window.Telegram.WebApp.initDataUnsafe.user;
@@ -513,14 +519,12 @@
                 document.getElementById('playerAccId').innerText = "ID: #" + playerTelegramId;
             }
 
-            // لغو بارگذاری اطلاعات ذخیره‌شده‌ی این کاربر
             loadUserData();
             
             document.getElementById('headerPlayerName').innerText = userProfile.name;
             document.getElementById('headerAvatar').src = userProfile.avatar;
             document.getElementById('settingsAvatarPreview').src = userProfile.avatar;
 
-            // اصلاح دقیق لینک دعوت (Referral Link) سازگار با تلگرام
             let correctRefLink = `https://t.me/${botUsername}/${webAppShortName}?start=ref_${playerTelegramId}`;
             document.getElementById('referralLinkInput').value = correctRefLink;
             
@@ -661,7 +665,6 @@
             openAlert("Your profile settings have been saved successfully! ✅", "Saved");
         }
 
-        // بخش تبلیغات واقعی با Adsgram
         function watchAd() {
             if (typeof window.Adsgram !== 'undefined') {
                 let adController = window.Adsgram.init({ blockId: AD_BLOCK_ID });
@@ -677,7 +680,7 @@
 
         function grantAdReward() {
             userChances += 1;
-            totalPrizePoolUSD += 0.10; 
+            totalPrizePoolUSD += 0.10; // افزودن به استخر جایزه سراسری
             saveUserData();
             updateUI();
             openAlert(`Ad watched successfully! +1 Chance added and added to prize pool. 🎉`, "Reward Granted!");
@@ -762,7 +765,6 @@
             }, 4000);
         }
 
-        // بخش پرداخت واقعی (جهت واریز امن به کیف پول مالک و افزودن شانس)
         function buyChance() {
             let paymentInfoHtml = `
                 <p><b>💳 Buy Chance (20 TL / USDT equivalent)</b></p>
@@ -777,7 +779,7 @@
 
         function simulateSuccessfulPayment() {
             userChances += 1;
-            totalPrizePoolUSD += 0.65;
+            totalPrizePoolUSD += 0.65; // افزایش استخر جایزه سراسری به ازای هر خرید
             saveUserData();
             updateUI();
             closeModal();
@@ -846,6 +848,12 @@
         }
 
         function updateUI() {
+            // به‌روزرسانی مداوم استخر جایزه از حافظه سراسری
+            let sharedPool = localStorage.getItem('global_shared_prize_pool');
+            if (sharedPool !== null) {
+                totalPrizePoolUSD = parseFloat(sharedPool);
+            }
+
             document.getElementById('chanceBalance').innerText = userChances;
             document.getElementById('prizePoolDisplay').innerText = "$" + totalPrizePoolUSD.toFixed(2) + " USDT";
             
@@ -860,4 +868,4 @@
         startCountdownTimer();
     </script>
 </body>
-                                                  </html>
+</html>
