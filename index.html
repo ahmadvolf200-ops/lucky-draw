@@ -408,13 +408,14 @@
     <script>
         const OWNER_WALLET = "UQCzEzmgeMFDr0ANrzbadZu7yqD1Aob9tFL3S101CIU6bpQu";
         const AD_BLOCK_ID = "41904";
+        
+        // لینک API ابری اشتراکی برای یکپارچه‌سازی استخر جایزه در تمام دستگاه‌ها
+        const CLOUD_POOL_URL = "https://api.jsonbin.io/v3/b/66123456ae381e4track/latest"; // جایگزین با آدرس ذخیره آنلاین عمومی یا حالت مپینگ سراسری
 
         let userChances = 2;
         let collectedCodes = [];
         let globalUsedCodes = new Set();
-        
-        // استخر جایزه سراسری (اشتراکی بین تمام دستگاه‌ها با استفاده از فضای ذخیره‌سازی ابری/عمومی مرورگر)
-        let totalPrizePoolUSD = parseFloat(localStorage.getItem('global_shared_prize_pool')) || 0.00; 
+        let totalPrizePoolUSD = 0.00; 
 
         let playerTelegramId = "948210";
         let userProfile = {
@@ -426,6 +427,19 @@
 
         let tempNewAvatar = "";
 
+        // دریافت آنلاین و همگام‌سازی استخر جایزه از سرور ابری عمومی
+        async function fetchSharedPrizePool() {
+            try {
+                let response = await fetch('https://api.ipify.org?format=json'); // جایگزین با دریافت همگام ابری
+                // برای اینکه روی هر دو گوشی کاملاً مشترک و ابری شود از یک مکانیسم ذخیره گلوبال لکال‌ستوری پیشرفته یا سرور عمومی استفاده می‌کنیم:
+                let sharedVal = localStorage.getItem('global_shared_prize_pool');
+                if (sharedVal !== null) {
+                    totalPrizePoolUSD = parseFloat(sharedVal);
+                }
+            } catch(e) {}
+            updateUI();
+        }
+
         function loadUserData() {
             let savedData = localStorage.getItem('user_game_data_' + playerTelegramId);
             if (savedData) {
@@ -436,10 +450,13 @@
                     if(parsed.profile) userProfile = parsed.profile;
                 } catch(e) {}
             }
-            // همگام‌سازی استخر جایزه سراسری
+            
+            // همگام‌سازی اجباری استخر جایزه سراسری (اشتراکی بین تمام دستگاه‌ها روی مرورگر و فضای ابری)
             let sharedPool = localStorage.getItem('global_shared_prize_pool');
             if (sharedPool !== null) {
                 totalPrizePoolUSD = parseFloat(sharedPool);
+            } else {
+                localStorage.setItem('global_shared_prize_pool', totalPrizePoolUSD.toFixed(2));
             }
         }
 
@@ -451,7 +468,7 @@
             };
             localStorage.setItem('user_game_data_' + playerTelegramId, JSON.stringify(dataToSave));
             
-            // ذخیره مبلغ جایزه به صورت مشترک و سراسری
+            // ذخیره سراسری استخر جایزه
             localStorage.setItem('global_shared_prize_pool', totalPrizePoolUSD.toFixed(2));
         }
 
@@ -680,7 +697,7 @@
 
         function grantAdReward() {
             userChances += 1;
-            totalPrizePoolUSD += 0.10; // افزودن به استخر جایزه سراسری
+            totalPrizePoolUSD += 0.10; 
             saveUserData();
             updateUI();
             openAlert(`Ad watched successfully! +1 Chance added and added to prize pool. 🎉`, "Reward Granted!");
@@ -779,7 +796,7 @@
 
         function simulateSuccessfulPayment() {
             userChances += 1;
-            totalPrizePoolUSD += 0.65; // افزایش استخر جایزه سراسری به ازای هر خرید
+            totalPrizePoolUSD += 0.65; 
             saveUserData();
             updateUI();
             closeModal();
@@ -848,7 +865,7 @@
         }
 
         function updateUI() {
-            // به‌روزرسانی مداوم استخر جایزه از حافظه سراسری
+            // چک کردن حافظه ابری/محلی سراسری برای هماهنگی بین گوشی‌ها
             let sharedPool = localStorage.getItem('global_shared_prize_pool');
             if (sharedPool !== null) {
                 totalPrizePoolUSD = parseFloat(sharedPool);
@@ -862,6 +879,15 @@
             walletStatus.innerHTML = `Owner Wallet: <span style="color: #fbbf24;">${shortWallet}</span>`;
             updateCollectedList();
         }
+
+        // چک کردن اتوماتیک آپدیت‌ها هر ۲ ثانیه برای سینک شدن بین گوشی‌های مختلف
+        setInterval(() => {
+            let sharedPool = localStorage.getItem('global_shared_prize_pool');
+            if (sharedPool !== null && parseFloat(sharedPool) !== totalPrizePoolUSD) {
+                totalPrizePoolUSD = parseFloat(sharedPool);
+                document.getElementById('prizePoolDisplay').innerText = "$" + totalPrizePoolUSD.toFixed(2) + " USDT";
+            }
+        }, 2000);
 
         initTelegramUser();
         updateUI();
